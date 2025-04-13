@@ -5,6 +5,12 @@ Interface Name Tracking: Automatically detects when interfaces change names (wla
 Driver-Specific Adjustments: Handles different wireless card drivers properly
 Error Detection & Recovery: Identifies when monitor mode fails and attempts alternative methods
 Detailed Logging: Shows what's happening at each step for easier troubleshooting
+![001](https://github.com/user![002](https://github.com/user-attachments/assets/1d25ea78-1568-432f-9362-5781c53ec15c)
+-attachments/assets/f741a2af![005](https://github.com/user-attachments/assets/e6db2b83-45c0-4aa7-9aca-9eaf9732efd3)
+-2bda-476c-87fc-1740ab43ab9c)![006](https://github.com/user-attachments/assets/a00756e4-1756-429f-b8ab-ad5686690786)
+
+
+
 
 
 nstallation Instructions (Updated & Simplified)
