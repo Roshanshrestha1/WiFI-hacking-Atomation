@@ -15,6 +15,7 @@ cd ~/wifi-tool
 Step 2: Download the Fixed Tool
 Copy# Download the fixed HTML file
 wget https://page.genspark.site/page/toolu_017nzNuNTZ6Pg1Rxo3ksYLqj/fixed_kali_aircrack_tool.html -O index.html
+
 Step 3: Create Backend PHP Files
 Create the main backend handler:
 
