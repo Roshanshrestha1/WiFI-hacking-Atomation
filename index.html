@@ -1,0 +1,1947 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Aircrack-ng Automation Tool - by Roshan Shrestha</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css">
+    <style>
+        .terminal {
+            background-color: #1E1E1E;
+            color: #EEFFFF;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            padding: 12px;
+            border-radius: 5px;
+            overflow-y: auto;
+            height: 300px;
+            white-space: pre-wrap;
+        }
+        .command-success {
+            color: #C3E88D;
+        }
+        .command-error {
+            color: #FF5370;
+        }
+        .command-warning {
+            color: #FFCB6B;
+        }
+        .command-info {
+            color: #82AAFF;
+        }
+        .blink {
+            animation: blink-animation 1s steps(2, start) infinite;
+        }
+        @keyframes blink-animation {
+            to { visibility: hidden; }
+        }
+        .custom-tab {
+            border-bottom: 2px solid transparent;
+        }
+        .custom-tab.active {
+            border-bottom: 2px solid #F56565;
+        }
+        .loading {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #F56565;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Custom toggle switch */
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #68D391;
+        }
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="flex justify-between items-center mb-8">
+            <div>
+                <h1 class="text-3xl font-bold text-red-500">Advanced Aircrack-ng Automation Tool</h1>
+                <p class="text-gray-400">Designed for Kali Linux by Roshan Shrestha</p>
+            </div>
+            <div class="flex items-center">
+                <span id="status-indicator" class="h-3 w-3 rounded-full bg-gray-500 mr-2"></span>
+                <span id="status-text" class="text-sm">Initializing...</span>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6 mb-6">
+            <!-- Tabs Navigation -->
+            <div class="flex border-b border-gray-700 mb-6">
+                <button class="custom-tab active px-4 py-2 focus:outline-none" data-tab="setup">
+                    <i class="fas fa-cog mr-2"></i>Setup
+                </button>
+                <button class="custom-tab px-4 py-2 focus:outline-none" data-tab="scan">
+                    <i class="fas fa-wifi mr-2"></i>Network Scan
+                </button>
+                <button class="custom-tab px-4 py-2 focus:outline-none" data-tab="capture">
+                    <i class="fas fa-key mr-2"></i>Handshake Capture
+                </button>
+                <button class="custom-tab px-4 py-2 focus:outline-none" data-tab="crack">
+                    <i class="fas fa-unlock mr-2"></i>Password Cracking
+                </button>
+                <button class="custom-tab px-4 py-2 focus:outline-none" data-tab="logs">
+                    <i class="fas fa-file-alt mr-2"></i>Logs
+                </button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Setup Tab -->
+                <div id="setup" class="tab-pane">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4">Interface Setup</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-300 mb-2">Available Wireless Interfaces</label>
+                                <select id="interface-select" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-red-500">
+                                    <option value="">Detecting interfaces...</option>
+                                </select>
+                                <button id="refresh-interfaces" class="mt-2 bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">
+                                    <i class="fas fa-sync-alt mr-1"></i> Refresh
+                                </button>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-gray-300 mb-2">Monitor Mode Control</label>
+                                <div class="flex space-x-2">
+                                    <button id="enable-monitor" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                                        <i class="fas fa-play mr-2"></i>Enable Monitor Mode
+                                    </button>
+                                    <button id="disable-monitor" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+                                        <i class="fas fa-stop mr-2"></i>Disable Monitor Mode
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <label class="block text-gray-300 mb-2">Advanced Options</label>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                            <input type="checkbox" id="kill-processes" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+                                            <label for="kill-processes" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                        </div>
+                                        <label for="kill-processes" class="text-sm">Kill Network Processes</label>
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                            <input type="checkbox" id="use-legacy" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+                                            <label for="use-legacy" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                        </div>
+                                        <label for="use-legacy" class="text-sm">Use Legacy Method (for older adapters)</label>
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                            <input type="checkbox" id="debug-mode" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+                                            <label for="debug-mode" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                        </div>
+                                        <label for="debug-mode" class="text-sm">Debug Mode (verbose output)</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4">System Status</h3>
+                            
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div class="bg-gray-800 p-3 rounded">
+                                    <h4 class="text-gray-400 text-sm">Interface Mode</h4>
+                                    <p id="interface-mode" class="text-lg font-mono">Unknown</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded">
+                                    <h4 class="text-gray-400 text-sm">Driver</h4>
+                                    <p id="interface-driver" class="text-lg font-mono">Unknown</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded">
+                                    <h4 class="text-gray-400 text-sm">MAC Address</h4>
+                                    <p id="interface-mac" class="text-lg font-mono">Unknown</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded">
+                                    <h4 class="text-gray-400 text-sm">Aircrack-ng Version</h4>
+                                    <p id="aircrack-version" class="text-lg font-mono">Unknown</p>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-gray-800 p-3 rounded mb-4">
+                                <h4 class="text-gray-400 text-sm mb-2">Available Tools</h4>
+                                <div id="tools-status" class="grid grid-cols-2 gap-2">
+                                    <div class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
+                                        <span>airmon-ng</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
+                                        <span>airodump-ng</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
+                                        <span>aireplay-ng</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <span class="h-2 w-2 rounded-full bg-gray-500 mr-2"></span>
+                                        <span>aircrack-ng</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button id="run-diagnostics" class="w-full bg-indigo-600 hover:bg-indigo-700 px-4 py-2 rounded">
+                                <i class="fas fa-stethoscope mr-2"></i>Run Diagnostics
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Network Scan Tab -->
+                <div id="scan" class="tab-pane hidden">
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-xl font-bold">Network Scanner</h3>
+                            <div class="flex items-center">
+                                <span class="mr-2">Monitor Interface:</span>
+                                <span id="current-monitor" class="font-mono bg-gray-700 px-2 py-1 rounded">None</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex space-x-2 mb-4">
+                            <button id="start-scan" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                                <i class="fas fa-search mr-2"></i>Start Scanning
+                            </button>
+                            <button id="stop-scan" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded" disabled>
+                                <i class="fas fa-stop mr-2"></i>Stop Scanning
+                            </button>
+                        </div>
+                        
+                        <div class="flex space-x-2 mb-4">
+                            <div class="bg-gray-700 p-3 rounded flex-1">
+                                <label class="block text-gray-400 text-sm mb-1">Channel</label>
+                                <select id="scan-channel" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2">
+                                    <option value="all">All Channels</option>
+                                    <option value="1">Channel 1</option>
+                                    <option value="2">Channel 2</option>
+                                    <option value="3">Channel 3</option>
+                                    <option value="4">Channel 4</option>
+                                    <option value="5">Channel 5</option>
+                                    <option value="6">Channel 6</option>
+                                    <option value="7">Channel 7</option>
+                                    <option value="8">Channel 8</option>
+                                    <option value="9">Channel 9</option>
+                                    <option value="10">Channel 10</option>
+                                    <option value="11">Channel 11</option>
+                                    <option value="12">Channel 12</option>
+                                    <option value="13">Channel 13</option>
+                                </select>
+                            </div>
+                            <div class="bg-gray-700 p-3 rounded flex-1">
+                                <label class="block text-gray-400 text-sm mb-1">Band</label>
+                                <select id="scan-band" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2">
+                                    <option value="bg">2.4 GHz (b/g/n)</option>
+                                    <option value="a">5 GHz (a/n/ac)</option>
+                                    <option value="abg">Both (2.4 GHz + 5 GHz)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+                        <table class="w-full">
+                            <thead class="bg-gray-900">
+                                <tr>
+                                    <th class="px-4 py-3 text-left">BSSID</th>
+                                    <th class="px-4 py-3 text-left">ESSID</th>
+                                    <th class="px-4 py-3 text-center">Channel</th>
+                                    <th class="px-4 py-3 text-center">Signal</th>
+                                    <th class="px-4 py-3 text-center">Security</th>
+                                    <th class="px-4 py-3 text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="network-list" class="divide-y divide-gray-700">
+                                <tr>
+                                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                                        Start scanning to discover networks
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Handshake Capture Tab -->
+                <div id="capture" class="tab-pane hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4">Target Network</h3>
+                            <div id="no-target-selected" class="text-gray-400 mb-4">
+                                No target network selected. Please scan and select a network first.
+                            </div>
+                            <div id="target-info" class="hidden">
+                                <div class="grid grid-cols-2 gap-4 mb-4">
+                                    <div class="bg-gray-800 p-3 rounded">
+                                        <h4 class="text-gray-400 text-sm">BSSID</h4>
+                                        <p id="target-bssid" class="text-lg font-mono">--:--:--:--:--:--</p>
+                                    </div>
+                                    <div class="bg-gray-800 p-3 rounded">
+                                        <h4 class="text-gray-400 text-sm">ESSID</h4>
+                                        <p id="target-essid" class="text-lg font-mono">Unknown</p>
+                                    </div>
+                                    <div class="bg-gray-800 p-3 rounded">
+                                        <h4 class="text-gray-400 text-sm">Channel</h4>
+                                        <p id="target-channel" class="text-lg font-mono">0</p>
+                                    </div>
+                                    <div class="bg-gray-800 p-3 rounded">
+                                        <h4 class="text-gray-400 text-sm">Security</h4>
+                                        <p id="target-security" class="text-lg font-mono">Unknown</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="mb-4">
+                                    <h4 class="text-gray-400 text-sm mb-2">Deauthentication Options</h4>
+                                    <div class="flex items-center mb-2">
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                            <input type="checkbox" id="deauth-all-clients" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" checked />
+                                            <label for="deauth-all-clients" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                        </div>
+                                        <label for="deauth-all-clients" class="text-sm">Deauthenticate All Clients</label>
+                                    </div>
+                                    
+                                    <div class="flex space-x-2 items-center">
+                                        <label class="text-sm whitespace-nowrap">Deauth Packets:</label>
+                                        <input type="range" id="deauth-packets" min="1" max="10" value="3" 
+                                            class="w-full h-2 bg-gray-600 rounded-lg appearance-none cursor-pointer">
+                                        <span id="deauth-packets-value" class="text-sm font-mono bg-gray-800 px-2 py-1 rounded w-10 text-center">3</span>
+                                    </div>
+                                </div>
+                                
+                                <button id="start-capture" class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded mb-2">
+                                    <i class="fas fa-key mr-2"></i>Start Handshake Capture
+                                </button>
+                                <button id="stop-capture" class="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded" disabled>
+                                    <i class="fas fa-stop mr-2"></i>Stop Capture
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4">Capture Status</h3>
+                            <div id="capture-status" class="mb-4 p-3 bg-gray-800 rounded text-gray-400">
+                                Waiting to start capture...
+                            </div>
+                            
+                            <div id="client-list-container" class="mb-4 hidden">
+                                <h4 class="text-gray-400 text-sm mb-2">Connected Clients</h4>
+                                <div class="bg-gray-800 rounded p-2 max-h-32 overflow-y-auto">
+                                    <table class="w-full">
+                                        <thead class="bg-gray-900">
+                                            <tr>
+                                                <th class="px-2 py-1 text-left text-xs">MAC</th>
+                                                <th class="px-2 py-1 text-center text-xs">Packets</th>
+                                                <th class="px-2 py-1 text-center text-xs">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="client-list" class="divide-y divide-gray-700 text-sm">
+                                            <!-- Client list will be populated here -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <div id="captured-handshakes-container">
+                                <h4 class="text-gray-400 text-sm mb-2">Captured Handshakes</h4>
+                                <div class="bg-gray-800 rounded p-2 max-h-48 overflow-y-auto">
+                                    <div id="no-handshakes" class="text-center text-gray-500 py-4">
+                                        No handshakes captured yet
+                                    </div>
+                                    <ul id="handshake-list" class="divide-y divide-gray-700">
+                                        <!-- Handshake list will be populated here -->
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-gray-700 p-4 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4">Capture Output</h3>
+                        <div id="capture-terminal" class="terminal">
+                            Waiting for capture to begin...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Password Cracking Tab -->
+                <div id="crack" class="tab-pane hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4">Cracking Configuration</h3>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-300 mb-2">Select Captured Handshake</label>
+                                <select id="handshake-select" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-red-500">
+                                    <option value="">No handshakes available</option>
+                                </select>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-300 mb-2">Wordlist Selection</label>
+                                <select id="wordlist-select" class="w-full bg-gray-800 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-red-500 mb-2">
+                                    <option value="/usr/share/wordlists/rockyou.txt">rockyou.txt</option>
+                                    <option value="/usr/share/wordlists/fasttrack.txt">fasttrack.txt</option>
+                                    <option value="/usr/share/john/password.lst">john/password.lst</option>
+                                    <option value="custom">Upload Custom Wordlist</option>
+                                </select>
+                                
+                                <div id="custom-wordlist-container" class="hidden">
+                                    <input type="file" id="custom-wordlist-file" class="hidden" accept=".txt,.lst,.dict">
+                                    <div class="flex w-full">
+                                        <input type="text" id="custom-wordlist-name" class="flex-grow bg-gray-800 border border-gray-600 rounded-l px-3 py-2" placeholder="No file selected" readonly>
+                                        <button id="browse-wordlist" class="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-r">Browse</button>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="block text-gray-300 mb-2">Attack Options</label>
+                                <div class="space-y-2">
+                                    <div class="flex items-center">
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                            <input type="checkbox" id="use-rules" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+                                            <label for="use-rules" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                        </div>
+                                        <label for="use-rules" class="text-sm">Apply Rule-Based Transformations</label>
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <div class="relative inline-block w-10 mr-2 align-middle select-none">
+                                            <input type="checkbox" id="use-mask" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer" />
+                                            <label for="use-mask" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-600 cursor-pointer"></label>
+                                        </div>
+                                        <label for="use-mask" class="text-sm">Use Mask Attack (Hybrid)</label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <button id="start-cracking" class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded mb-2" disabled>
+                                <i class="fas fa-unlock mr-2"></i>Start Cracking
+                            </button>
+                            <button id="stop-cracking" class="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded" disabled>
+                                <i class="fas fa-stop mr-2"></i>Stop Cracking
+                            </button>
+                        </div>
+                        
+                        <div class="bg-gray-700 p-4 rounded-lg">
+                            <h3 class="text-xl font-bold mb-4">Cracking Status</h3>
+                            
+                            <div id="cracking-status" class="mb-4 p-3 bg-gray-800 rounded text-gray-400">
+                                Configure and start password cracking...
+                            </div>
+                            
+                            <div class="mb-4">
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-gray-400 text-sm">Progress</label>
+                                    <span id="progress-percentage" class="text-gray-400 text-sm">0%</span>
+                                </div>
+                                <div class="w-full bg-gray-800 rounded-full h-4">
+                                    <div id="progress-bar" class="bg-red-600 h-4 rounded-full" style="width: 0%"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div class="bg-gray-800 p-3 rounded">
+                                    <h4 class="text-gray-400 text-sm">Speed</h4>
+                                    <p id="crack-speed" class="text-lg font-mono">0 k/s</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded">
+                                    <h4 class="text-gray-400 text-sm">Elapsed Time</h4>
+                                    <p id="crack-time" class="text-lg font-mono">00:00:00</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded">
+                                    <h4 class="text-gray-400 text-sm">Keys Tested</h4>
+                                    <p id="keys-tested" class="text-lg font-mono">0</p>
+                                </div>
+                                <div class="bg-gray-800 p-3 rounded">
+                                    <h4 class="text-gray-400 text-sm">Estimated Completion</h4>
+                                    <p id="etc" class="text-lg font-mono">--:--:--</p>
+                                </div>
+                            </div>
+                            
+                            <div id="password-result" class="hidden mb-4 p-4 bg-green-800 bg-opacity-30 border border-green-600 rounded">
+                                <h4 class="text-green-400 text-sm mb-2">Password Found!</h4>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">Network:</span>
+                                    <span id="result-essid" class="font-mono">Unknown</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">BSSID:</span>
+                                    <span id="result-bssid" class="font-mono">Unknown</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-300">Password:</span>
+                                    <span id="result-password" class="font-mono">Unknown</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-6 bg-gray-700 p-4 rounded-lg">
+                        <h3 class="text-xl font-bold mb-4">Cracking Output</h3>
+                        <div id="crack-terminal" class="terminal">
+                            Waiting for password cracking to begin...
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Logs Tab -->
+                <div id="logs" class="tab-pane hidden">
+                    <div class="mb-4 flex justify-between items-center">
+                        <h3 class="text-xl font-bold">System Logs</h3>
+                        <div class="space-x-2">
+                            <button id="refresh-logs" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded text-sm">
+                                <i class="fas fa-sync-alt mr-1"></i> Refresh
+                            </button>
+                            <button id="clear-logs" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                                <i class="fas fa-trash-alt mr-1"></i> Clear
+                            </button>
+                            <button id="save-logs" class="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm">
+                                <i class="fas fa-download mr-1"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-gray-700 p-3 rounded-lg flex items-center">
+                            <div class="bg-blue-500 bg-opacity-20 p-2 rounded-full mr-3">
+                                <i class="fas fa-info-circle text-blue-400 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm text-gray-400">Info Messages</h4>
+                                <p id="info-count" class="text-xl font-bold">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 p-3 rounded-lg flex items-center">
+                            <div class="bg-yellow-500 bg-opacity-20 p-2 rounded-full mr-3">
+                                <i class="fas fa-exclamation-triangle text-yellow-400 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm text-gray-400">Warnings</h4>
+                                <p id="warning-count" class="text-xl font-bold">0</p>
+                            </div>
+                        </div>
+                        <div class="bg-gray-700 p-3 rounded-lg flex items-center">
+                            <div class="bg-red-500 bg-opacity-20 p-2 rounded-full mr-3">
+                                <i class="fas fa-times-circle text-red-400 text-xl"></i>
+                            </div>
+                            <div>
+                                <h4 class="text-sm text-gray-400">Errors</h4>
+                                <p id="error-count" class="text-xl font-bold">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-800 rounded-lg p-4">
+                        <div class="flex space-x-2 mb-4">
+                            <button class="log-filter active px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-filter="all">All</button>
+                            <button class="log-filter px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-filter="info">Info</button>
+                            <button class="log-filter px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-filter="warning">Warnings</button>
+                            <button class="log-filter px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-filter="error">Errors</button>
+                            <button class="log-filter px-3 py-1 bg-gray-700 hover:bg-gray-600 rounded text-sm" data-filter="command">Commands</button>
+                        </div>
+                        
+                        <div id="log-container" class="terminal h-96">
+                            Loading logs...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Terminal Output -->
+        <div class="bg-gray-800 rounded-lg shadow-lg p-4">
+            <div class="flex justify-between items-center mb-2">
+                <h3 class="text-xl font-bold">Terminal Output</h3>
+                <button id="clear-terminal" class="bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm">
+                    <i class="fas fa-eraser mr-1"></i> Clear
+                </button>
+            </div>
+            <div id="main-terminal" class="terminal">
+                $ <span class="blink">_</span>
+            </div>
+        </div>
+        
+        <!-- Footer -->
+        <footer class="mt-8 text-center text-gray-400 text-sm">
+            <p>Advanced Aircrack-ng Automation Tool &copy; 2023 by Roshan Shrestha</p>
+            <p class="mt-1">For educational and authorized security testing purposes only.</p>
+        </footer>
+    </div>
+    
+    <!-- Modal for displaying error messages -->
+    <div id="error-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-50"></div>
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6 max-w-md z-10">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold text-red-500">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="error-title">Error</span>
+                </h3>
+                <button id="close-error-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="error-message" class="mb-4">
+                An unexpected error occurred.
+            </div>
+            <div id="error-details" class="bg-gray-900 p-3 rounded text-sm font-mono mb-4 overflow-auto max-h-40">
+                Error details will appear here.
+            </div>
+            <div class="flex justify-end">
+                <button id="error-ok" class="bg-red-600 hover:bg-red-700 px-4 py-2 rounded">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal for interface diagnostic results -->
+    <div id="diagnostic-modal" class="fixed inset-0 flex items-center justify-center z-50 hidden">
+        <div class="absolute inset-0 bg-black opacity-50"></div>
+        <div class="bg-gray-800 rounded-lg shadow-lg p-6 max-w-3xl w-full z-10">
+            <div class="flex justify-between items-start mb-4">
+                <h3 class="text-xl font-bold">
+                    <i class="fas fa-stethoscope mr-2"></i>
+                    Diagnostic Results
+                </h3>
+                <button id="close-diagnostic-modal" class="text-gray-400 hover:text-white">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="diagnostic-results" class="mb-4 overflow-auto max-h-96">
+                <div class="animate-pulse">
+                    <div class="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
+                    <div class="h-4 bg-gray-700 rounded w-1/2 mb-2"></div>
+                    <div class="h-4 bg-gray-700 rounded w-5/6 mb-2"></div>
+                    <div class="h-4 bg-gray-700 rounded w-2/3 mb-2"></div>
+                </div>
+            </div>
+            <div class="flex justify-between">
+                <button id="diagnostic-apply-fixes" class="bg-green-600 hover:bg-green-700 px-4 py-2 rounded">
+                    Apply Recommended Fixes
+                </button>
+                <button id="diagnostic-close" class="bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application state
+        const appState = {
+            interfaces: [],
+            currentInterface: null,
+            monitorMode: false,
+            scanning: false,
+            capturing: false,
+            cracking: false,
+            targetNetwork: null,
+            clients: [],
+            handshakes: [],
+            captureProcess: null,
+            logs: [],
+            debugMode: false
+        };
+        
+        // DOM utility functions
+        const $ = (selector) => document.querySelector(selector);
+        const $$ = (selector) => document.querySelectorAll(selector);
+        
+        // Log levels
+        const LOG_LEVEL = {
+            INFO: 'info',
+            WARNING: 'warning',
+            ERROR: 'error',
+            COMMAND: 'command',
+            SUCCESS: 'success'
+        };
+        
+        // Initialize the application when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            initTabs();
+            initTerminal();
+            initEventListeners();
+            detectInterfaces();
+            checkAircrackTools();
+            
+            // Initialize logs
+            addLog('Application initialized', LOG_LEVEL.INFO);
+            addLog('Welcome to Advanced Aircrack-ng Automation Tool by Roshan Shrestha', LOG_LEVEL.INFO);
+            addLog('For educational and authorized security testing purposes only', LOG_LEVEL.WARNING);
+        });
+        
+        // Initialize tab switching
+        function initTabs() {
+            const tabs = $$('.custom-tab');
+            const tabContents = $$('.tab-pane');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // Remove active class from all tabs
+                    tabs.forEach(t => t.classList.remove('active'));
+                    
+                    // Add active class to clicked tab
+                    tab.classList.add('active');
+                    
+                    // Hide all tab contents
+                    tabContents.forEach(content => content.classList.add('hidden'));
+                    
+                    // Show corresponding tab content
+                    const tabName = tab.getAttribute('data-tab');
+                    $(`#${tabName}`).classList.remove('hidden');
+                });
+            });
+        }
+        
+        // Initialize the terminal
+        function initTerminal() {
+            const terminal = $('#main-terminal');
+            terminal.innerHTML = `$ <span class="blink">_</span>`;
+            
+            // Initialize capture terminal
+            $('#capture-terminal').textContent = 'Waiting for capture to begin...';
+            
+            // Initialize crack terminal
+            $('#crack-terminal').textContent = 'Waiting for password cracking to begin...';
+        }
+        
+        // Initialize event listeners
+        function initEventListeners() {
+            // Setup tab
+            $('#refresh-interfaces').addEventListener('click', detectInterfaces);
+            $('#enable-monitor').addEventListener('click', enableMonitorMode);
+            $('#disable-monitor').addEventListener('click', disableMonitorMode);
+            $('#run-diagnostics').addEventListener('click', runDiagnostics);
+            $('#debug-mode').addEventListener('change', toggleDebugMode);
+            
+            // Scan tab
+            $('#start-scan').addEventListener('click', startNetworkScan);
+            $('#stop-scan').addEventListener('click', stopNetworkScan);
+            
+            // Capture tab
+            $('#start-capture').addEventListener('click', startHandshakeCapture);
+            $('#stop-capture').addEventListener('click', stopHandshakeCapture);
+            $('#deauth-packets').addEventListener('input', () => {
+                $('#deauth-packets-value').textContent = $('#deauth-packets').value;
+            });
+            
+            // Password cracking tab
+            $('#start-cracking').addEventListener('click', startPasswordCracking);
+            $('#stop-cracking').addEventListener('click', stopPasswordCracking);
+            $('#wordlist-select').addEventListener('change', handleWordlistSelection);
+            $('#browse-wordlist').addEventListener('click', () => $('#custom-wordlist-file').click());
+            $('#custom-wordlist-file').addEventListener('change', updateCustomWordlistName);
+            
+            // Logs tab
+            $('#refresh-logs').addEventListener('click', refreshLogs);
+            $('#clear-logs').addEventListener('click', clearLogs);
+            $('#save-logs').addEventListener('click', saveLogs);
+
+            $$('.log-filter').forEach(filter => {
+                filter.addEventListener('click', (e) => {
+
+                    $$('.log-filter').forEach(f => f.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterLogs(e.target.getAttribute('data-filter'));
+                });
+            });
+            
+            // Error modal
+            $('#close-error-modal').addEventListener('click', closeErrorModal);
+            $('#error-ok').addEventListener('click', closeErrorModal);
+            
+            // Diagnostic modal
+            $('#close-diagnostic-modal').addEventListener('click', closeDiagnosticModal);
+            $('#diagnostic-close').addEventListener('click', closeDiagnosticModal);
+            $('#diagnostic-apply-fixes').addEventListener('click', applyRecommendedFixes);
+            
+            // Main terminal
+            $('#clear-terminal').addEventListener('click', clearMainTerminal);
+        }
+        
+        // Utility function to write to the main terminal
+        function writeToTerminal(text, type = 'normal') {
+            const terminal = $('#main-terminal');
+            const entry = document.createElement('div');
+            entry.className = type ? `command-${type}` : '';
+            entry.textContent = text;
+            terminal.appendChild(entry);
+            terminal.scrollTop = terminal.scrollHeight;
+            
+            // Add to logs if it's a command or error
+            if (type === 'error') {
+                addLog(text, LOG_LEVEL.ERROR);
+            } else if (type === 'success') {
+                addLog(text, LOG_LEVEL.SUCCESS);
+            }
+        }
+        
+        // Add log entry
+        function addLog(message, level = LOG_LEVEL.INFO) {
+            const timestamp = new Date().toISOString();
+            const logEntry = {
+                timestamp,
+                message,
+                level
+            };
+            
+            appState.logs.push(logEntry);
+            updateLogCounts();
+            updateLogDisplay();
+        }
+        
+        // Update log counts
+        function updateLogCounts() {
+            const infoCount = appState.logs.filter(log => log.level === LOG_LEVEL.INFO || log.level === LOG_LEVEL.SUCCESS).length;
+            const warningCount = appState.logs.filter(log => log.level === LOG_LEVEL.WARNING).length;
+            const errorCount = appState.logs.filter(log => log.level === LOG_LEVEL.ERROR).length;
+            
+            $('#info-count').textContent = infoCount;
+            $('#warning-count').textContent = warningCount;
+            $('#error-count').textContent = errorCount;
+        }
+        
+        // Update log display
+        function updateLogDisplay(filter = 'all') {
+            const logContainer = $('#log-container');
+            logContainer.innerHTML = '';
+            
+            let filteredLogs = appState.logs;
+            if (filter !== 'all') {
+                filteredLogs = appState.logs.filter(log => log.level === filter);
+            }
+            
+            if (filteredLogs.length === 0) {
+                logContainer.textContent = 'No logs to display.';
+                return;
+            }
+            
+            filteredLogs.forEach(log => {
+                const logEntry = document.createElement('div');
+                const timestamp = new Date(log.timestamp).toLocaleTimeString();
+                
+                let levelIndicator = '';
+                let className = '';
+                
+                switch (log.level) {
+                    case LOG_LEVEL.INFO:
+                        levelIndicator = '[INFO]';
+                        className = 'text-blue-400';
+                        break;
+                    case LOG_LEVEL.WARNING:
+                        levelIndicator = '[WARNING]';
+                        className = 'text-yellow-400';
+                        break;
+                    case LOG_LEVEL.ERROR:
+                        levelIndicator = '[ERROR]';
+                        className = 'text-red-400';
+                        break;
+                    case LOG_LEVEL.COMMAND:
+                        levelIndicator = '[COMMAND]';
+                        className = 'text-purple-400';
+                        break;
+                    case LOG_LEVEL.SUCCESS:
+                        levelIndicator = '[SUCCESS]';
+                        className = 'text-green-400';
+                        break;
+                }
+                
+                logEntry.className = className;
+                logEntry.textContent = `${timestamp} ${levelIndicator} ${log.message}`;
+                logContainer.appendChild(logEntry);
+            });
+            
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // Filter logs
+        function filterLogs(filter) {
+            updateLogDisplay(filter);
+        }
+        
+        // Refresh logs
+        function refreshLogs() {
+            updateLogDisplay();
+            addLog('Logs refreshed', LOG_LEVEL.INFO);
+        }
+        
+        // Clear logs
+        function clearLogs() {
+            appState.logs = [];
+            updateLogCounts();
+            updateLogDisplay();
+            addLog('Logs cleared', LOG_LEVEL.INFO);
+        }
+        
+        // Save logs
+        function saveLogs() {
+            const logText = appState.logs.map(log => {
+                const timestamp = new Date(log.timestamp).toLocaleString();
+                return `${timestamp} [${log.level.toUpperCase()}] ${log.message}`;
+            }).join('\n');
+            
+            const blob = new Blob([logText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `aircrack_logs_${new Date().toISOString().replace(/:/g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            addLog('Logs saved to file', LOG_LEVEL.SUCCESS);
+        }
+        
+        // Clear main terminal
+        function clearMainTerminal() {
+            $('#main-terminal').innerHTML = `$ <span class="blink">_</span>`;
+        }
+        
+        // Toggle debug mode
+        function toggleDebugMode() {
+            appState.debugMode = $('#debug-mode').checked;
+            addLog(`Debug mode ${appState.debugMode ? 'enabled' : 'disabled'}`, LOG_LEVEL.INFO);
+        }
+        
+        // Show error modal
+        function showErrorModal(title, message, details = '') {
+            $('#error-title').textContent = title;
+            $('#error-message').textContent = message;
+            $('#error-details').textContent = details;
+            $('#error-modal').classList.remove('hidden');
+        }
+        
+        // Close error modal
+        function closeErrorModal() {
+            $('#error-modal').classList.add('hidden');
+        }
+        
+        // Show diagnostic modal
+        function showDiagnosticModal(results) {
+            $('#diagnostic-results').innerHTML = results;
+            $('#diagnostic-modal').classList.remove('hidden');
+        }
+        
+        // Close diagnostic modal
+        function closeDiagnosticModal() {
+            $('#diagnostic-modal').classList.add('hidden');
+        }
+        
+        // Apply recommended fixes
+        function applyRecommendedFixes() {
+            addLog('Applying recommended fixes...', LOG_LEVEL.INFO);
+            writeToTerminal('Applying recommended fixes...', 'info');
+            
+            // Simulate fixing process
+            setTimeout(() => {
+                writeToTerminal('✓ Fixed driver issues', 'success');
+                writeToTerminal('✓ Network manager disabled', 'success');
+                writeToTerminal('✓ Interface reset complete', 'success');
+                writeToTerminal('All recommended fixes have been applied. Please try your operation again.', 'success');
+                addLog('Recommended fixes applied successfully', LOG_LEVEL.SUCCESS);
+                closeDiagnosticModal();
+            }, 2000);
+        }
+        
+        // Detect available wireless interfaces
+        function detectInterfaces() {
+            addLog('Detecting wireless interfaces...', LOG_LEVEL.INFO);
+            writeToTerminal('$ iwconfig', 'command');
+            
+            // Simulate interface detection
+            setTimeout(() => {
+                // Mock interfaces
+                appState.interfaces = ['wlan0', 'wlan1'];
+                
+                // Update interface select
+                const interfaceSelect = $('#interface-select');
+                interfaceSelect.innerHTML = '';
+                
+                if (appState.interfaces.length === 0) {
+                    const option = document.createElement('option');
+                    option.value = '';
+                    option.textContent = 'No wireless interfaces found';
+                    interfaceSelect.appendChild(option);
+                    writeToTerminal('No wireless interfaces found', 'error');
+                    addLog('No wireless interfaces found', LOG_LEVEL.ERROR);
+                } else {
+                    appState.interfaces.forEach(iface => {
+                        const option = document.createElement('option');
+                        option.value = iface;
+                        option.textContent = iface;
+                        interfaceSelect.appendChild(option);
+                    });
+                    
+                    writeToTerminal('Wireless interfaces detected: ' + appState.interfaces.join(', '), 'success');
+                    addLog(`Detected ${appState.interfaces.length} wireless interfaces`, LOG_LEVEL.SUCCESS);
+                    
+                    // Set first interface as current
+                    appState.currentInterface = appState.interfaces[0];
+                    updateInterfaceInfo();
+                }
+                
+                // Update status
+                updateStatus('Ready');
+            }, 1000);
+        }
+        
+        // Update interface information
+        function updateInterfaceInfo() {
+            if (!appState.currentInterface) {
+                $('#interface-mode').textContent = 'N/A';
+                $('#interface-driver').textContent = 'N/A';
+                $('#interface-mac').textContent = 'N/A';
+                return;
+            }
+            
+            // Simulate interface info fetching
+            $('#interface-mode').textContent = appState.monitorMode ? 'Monitor' : 'Managed';
+            $('#interface-driver').textContent = 'rtl8812au';
+            $('#interface-mac').textContent = '00:11:22:33:44:55';
+            
+            // Update current monitor interface display
+            $('#current-monitor').textContent = appState.monitorMode ? 
+                (appState.currentInterface.includes('mon') ? appState.currentInterface : `${appState.currentInterface}mon`) : 
+                'None';
+        }
+        
+        // Check Aircrack-ng tools availability
+        function checkAircrackTools() {
+            addLog('Checking Aircrack-ng tools...', LOG_LEVEL.INFO);
+            writeToTerminal('$ aircrack-ng --version', 'command');
+            
+            // Simulate tool checking
+            setTimeout(() => {
+                // Mock version
+                $('#aircrack-version').textContent = 'v1.6';
+                
+                // Update tool status indicators
+                const tools = ['airmon-ng', 'airodump-ng', 'aireplay-ng', 'aircrack-ng'];
+                const toolsStatus = $('#tools-status');
+                
+                toolsStatus.innerHTML = '';
+                tools.forEach(tool => {
+                    const div = document.createElement('div');
+                    div.className = 'flex items-center';
+                    div.innerHTML = `
+                        <span class="h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                        <span>${tool}</span>
+                    `;
+                    toolsStatus.appendChild(div);
+                });
+                
+                writeToTerminal('Aircrack-ng suite v1.6 detected', 'success');
+                addLog('Aircrack-ng tools are available', LOG_LEVEL.SUCCESS);
+            }, 800);
+        }
+        
+        // Enable monitor mode
+        function enableMonitorMode() {
+            const selectedInterface = $('#interface-select').value;
+            if (!selectedInterface) {
+                showErrorModal('Error', 'No interface selected', 'Please select a wireless interface first');
+                return;
+            }
+            
+            appState.currentInterface = selectedInterface;
+            updateStatus('Enabling monitor mode...');
+            addLog(`Enabling monitor mode on ${selectedInterface}...`, LOG_LEVEL.INFO);
+            
+            // Kill network manager if option is selected
+            if ($('#kill-processes').checked) {
+                writeToTerminal(`$ airmon-ng check kill`, 'command');
+                addLog('Killing interfering processes', LOG_LEVEL.COMMAND);
+            }
+            
+            // Use legacy method if selected
+            const legacyMode = $('#use-legacy').checked;
+            const command = legacyMode ? 
+                `$ ifconfig ${selectedInterface} down && iwconfig ${selectedInterface} mode monitor && ifconfig ${selectedInterface} up` :
+                `$ airmon-ng start ${selectedInterface}`;
+                
+            writeToTerminal(command, 'command');
+            
+            // Simulate monitor mode activation
+            setTimeout(() => {
+                if (Math.random() > 0.8 && !legacyMode) {
+                    // Simulate failure sometimes for normal mode
+                    writeToTerminal('Error: Could not enable monitor mode. Try using legacy mode.', 'error');
+                    addLog('Failed to enable monitor mode', LOG_LEVEL.ERROR);
+                    updateStatus('Error');
+                    showErrorModal('Monitor Mode Error', 
+                        'Failed to enable monitor mode', 
+                        'Common reasons include driver issues or hardware limitations. Try using legacy mode or run diagnostics.');
+                } else {
+                    // Success
+                    appState.monitorMode = true;
+                    writeToTerminal(`Monitor mode enabled on ${selectedInterface}${legacyMode ? '' : 'mon'}`, 'success');
+                    addLog(`Monitor mode enabled successfully`, LOG_LEVEL.SUCCESS);
+                    updateStatus('Monitor mode enabled');
+                    updateInterfaceInfo();
+                    
+                    // Enable scan button
+                    $('#start-scan').disabled = false;
+                }
+            }, 2000);
+        }
+        
+        // Disable monitor mode
+        function disableMonitorMode() {
+            if (!appState.currentInterface) {
+                showErrorModal('Error', 'No interface selected', 'Please select a wireless interface first');
+                return;
+            }
+            
+            updateStatus('Disabling monitor mode...');
+            addLog(`Disabling monitor mode on ${appState.currentInterface}...`, LOG_LEVEL.INFO);
+            
+            const legacyMode = $('#use-legacy').checked;
+            const interfaceName = appState.currentInterface.includes('mon') ? 
+                appState.currentInterface : 
+                `${appState.currentInterface}mon`;
+                
+            const command = legacyMode ? 
+                `$ ifconfig ${interfaceName} down && iwconfig ${interfaceName} mode managed && ifconfig ${appState.currentInterface} up` :
+                `$ airmon-ng stop ${interfaceName}`;
+                
+            writeToTerminal(command, 'command');
+            
+            // Simulate monitor mode deactivation
+            setTimeout(() => {
+                appState.monitorMode = false;
+                writeToTerminal('Monitor mode disabled', 'success');
+                addLog('Monitor mode disabled successfully', LOG_LEVEL.SUCCESS);
+                updateStatus('Ready');
+                updateInterfaceInfo();
+                
+                // Disable scan button
+                $('#start-scan').disabled = true;
+            }, 1500);
+        }
+        
+        // Run diagnostics
+        function runDiagnostics() {
+            updateStatus('Running diagnostics...');
+            addLog('Running interface diagnostics...', LOG_LEVEL.INFO);
+            writeToTerminal('$ Running comprehensive wireless interface diagnostics...', 'info');
+            
+            // Simulate diagnostics
+            setTimeout(() => {
+                const results = `
+                <div class="space-y-4">
+                    <div>
+                        <h4 class="font-bold text-blue-400">System Information</h4>
+                        <div class="bg-gray-900 p-3 rounded mt-2 font-mono text-sm">
+                            <p>Kali Linux 2023.1</p>
+                            <p>Kernel: 5.15.0-kali3-amd64</p>
+                            <p>Aircrack-ng: 1.6</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-blue-400">Wireless Interfaces</h4>
+                        <div class="bg-gray-900 p-3 rounded mt-2 font-mono text-sm">
+                            <p>wlan0: Realtek RTL8812AU [driver: rtl8812au]</p>
+                            <p>wlan1: Intel Corporation Wireless 8265 [driver: iwlwifi]</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-blue-400">Issues Detected</h4>
+                        <div class="bg-gray-900 p-3 rounded mt-2 font-mono text-sm">
+                            <p class="text-yellow-400">⚠ NetworkManager may interfere with monitor mode</p>
+                            <p class="text-yellow-400">⚠ RTL8812AU driver has known monitor mode issues</p>
+                            <p class="text-red-400">✖ wlan0: Unable to set proper channel in monitor mode</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 class="font-bold text-green-400">Recommended Fixes</h4>
+                        <div class="bg-gray-900 p-3 rounded mt-2 font-mono text-sm">
+                            <p>1. Temporarily disable NetworkManager:</p>
+                            <p class="pl-4">systemctl stop NetworkManager</p>
+                            <p>2. Use alternative driver for RTL8812AU:</p>
+                            <p class="pl-4">apt install realtek-rtl88xxau-dkms</p>
+                            <p>3. Try legacy method for monitor mode activation</p>
+                        </div>
+                    </div>
+                </div>
+                `;
+                
+                showDiagnosticModal(results);
+                writeToTerminal('Diagnostics completed. See results in the diagnostic window.', 'success');
+                addLog('Interface diagnostics completed', LOG_LEVEL.SUCCESS);
+                updateStatus('Ready');
+            }, 3000);
+        }
+        
+        // Start network scan
+        function startNetworkScan() {
+            if (!appState.monitorMode) {
+                showErrorModal('Error', 'Monitor mode not enabled', 'Please enable monitor mode first');
+                return;
+            }
+            
+            updateStatus('Scanning for networks...');
+            $('#start-scan').disabled = true;
+            $('#stop-scan').disabled = false;
+            appState.scanning = true;
+            
+            const interfaceName = appState.currentInterface.includes('mon') ? 
+                appState.currentInterface : 
+                `${appState.currentInterface}mon`;
+                
+            const channel = $('#scan-channel').value;
+            const band = $('#scan-band').value;
+            
+            const channelParam = channel === 'all' ? '' : `--channel ${channel}`;
+            const bandParam = band === 'abg' ? '--band abg' : band === 'a' ? '--band a' : '';
+            
+            const command = `$ airodump-ng ${channelParam} ${bandParam} ${interfaceName}`;
+            writeToTerminal(command, 'command');
+            addLog(`Starting network scan on ${interfaceName}`, LOG_LEVEL.COMMAND);
+            
+            // Clear network list
+            $('#network-list').innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                        <div class="flex justify-center items-center">
+                            <div class="loading mr-3"></div>
+                            Scanning for networks...
+                        </div>
+                    </td>
+                </tr>
+            `;
+            
+            // Simulate network scanning
+            setTimeout(() => {
+                // Mock network data
+                const networks = [
+                    { bssid: '00:11:22:33:44:55', essid: 'MyHomeNetwork', channel: 6, signal: -65, security: 'WPA2' },
+                    { bssid: 'AA:BB:CC:DD:EE:FF', essid: 'CoffeeShopWiFi', channel: 1, signal: -72, security: 'WPA2' },
+                    { bssid: '11:22:33:44:55:66', essid: 'GuestNetwork', channel: 11, signal: -80, security: 'WPA2' },
+                    { bssid: 'AA:BB:CC:11:22:33', essid: 'Office_5G', channel: 36, signal: -68, security: 'WPA2/WPA3' },
+                    { bssid: 'FF:EE:DD:CC:BB:AA', essid: 'PublicWiFi', channel: 3, signal: -75, security: 'Open' }
+                ];
+                
+                displayNetworks(networks);
+                writeToTerminal(`Found ${networks.length} networks`, 'success');
+                addLog(`Scan completed, found ${networks.length} networks`, LOG_LEVEL.SUCCESS);
+                
+                // Keep scan active but enable stop button
+                $('#stop-scan').disabled = false;
+            }, 3000);
+        }
+        
+        // Display networks in the table
+        function displayNetworks(networks) {
+            const networkList = $('#network-list');
+            networkList.innerHTML = '';
+            
+            if (networks.length === 0) {
+                networkList.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="px-4 py-8 text-center text-gray-400">
+                            No networks found
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            networks.forEach(network => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-700';
+                
+                // Calculate signal strength for visual indicator
+                const signalStrength = Math.min(100, Math.max(0, 100 + network.signal));
+                const signalClass = signalStrength > 70 ? 'bg-green-500' : 
+                                   signalStrength > 40 ? 'bg-yellow-500' : 'bg-red-500';
+                
+                row.innerHTML = `
+                    <td class="px-4 py-3 font-mono">${network.bssid}</td>
+                    <td class="px-4 py-3">${network.essid}</td>
+                    <td class="px-4 py-3 text-center">${network.channel}</td>
+                    <td class="px-4 py-3 text-center">
+                        <div class="flex items-center justify-center">
+                            <div class="w-16 bg-gray-700 rounded-full h-2 mr-2">
+                                <div class="${signalClass} h-2 rounded-full" style="width: ${signalStrength}%"></div>
+                            </div>
+                            <span>${network.signal} dBm</span>
+                        </div>
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        ${network.security === 'Open' ? 
+                            '<span class="bg-green-900 text-green-300 px-2 py-1 rounded text-xs">Open</span>' : 
+                            '<span class="bg-blue-900 text-blue-300 px-2 py-1 rounded text-xs">' + network.security + '</span>'}
+                    </td>
+                    <td class="px-4 py-3 text-center">
+                        <button class="select-network bg-red-600 hover:bg-red-700 px-3 py-1 rounded text-sm"
+                            data-bssid="${network.bssid}" 
+                            data-essid="${network.essid}" 
+                            data-channel="${network.channel}" 
+                            data-security="${network.security}">
+                            Select
+                        </button>
+                    </td>
+                `;
+                
+                networkList.appendChild(row);
+            });
+            
+            // Add event listeners to select buttons
+
+            $$('.select-network').forEach(button => {
+                button.addEventListener('click', selectNetwork);
+            });
+        }
+        
+        // Select a network
+        function selectNetwork(e) {
+            const button = e.target;
+            const bssid = button.getAttribute('data-bssid');
+            const essid = button.getAttribute('data-essid');
+            const channel = button.getAttribute('data-channel');
+            const security = button.getAttribute('data-security');
+            
+            // Store target network info
+            appState.targetNetwork = { bssid, essid, channel, security };
+            
+            // Update UI
+            $('#target-bssid').textContent = bssid;
+            $('#target-essid').textContent = essid;
+            $('#target-channel').textContent = channel;
+            $('#target-security').textContent = security;
+            
+            // Show target info and hide no target message
+            $('#no-target-selected').classList.add('hidden');
+            $('#target-info').classList.remove('hidden');
+            
+            // Switch to capture tab
+
+            $$('.custom-tab[data-tab="capture"]')[0].click();
+            
+            writeToTerminal(`Target network selected: ${essid} (${bssid})`, 'info');
+            addLog(`Selected target network: ${essid}`, LOG_LEVEL.INFO);
+        }
+        
+        // Stop network scan
+        function stopNetworkScan() {
+            $('#start-scan').disabled = false;
+            $('#stop-scan').disabled = true;
+            appState.scanning = false;
+            
+            writeToTerminal('$ Network scan stopped', 'command');
+            addLog('Network scan stopped', LOG_LEVEL.INFO);
+            updateStatus('Ready');
+        }
+        
+        // Start handshake capture
+        function startHandshakeCapture() {
+            if (!appState.targetNetwork) {
+                showErrorModal('Error', 'No target network selected', 'Please scan and select a target network first');
+                return;
+            }
+            
+            $('#start-capture').disabled = true;
+            $('#stop-capture').disabled = false;
+            appState.capturing = true;
+            
+            const interfaceName = appState.currentInterface.includes('mon') ? 
+                appState.currentInterface : 
+                `${appState.currentInterface}mon`;
+                
+            const { bssid, channel } = appState.targetNetwork;
+            const deauthPackets = $('#deauth-packets').value;
+            const deauthAll = $('#deauth-all-clients').checked;
+            
+            updateStatus('Capturing handshake...');
+            $('#capture-status').innerHTML = `
+                <div class="flex items-center">
+                    <div class="loading mr-3"></div>
+                    <span>Setting up capture on channel ${channel}...</span>
+                </div>
+            `;
+            
+            $('#capture-terminal').textContent = '';
+            writeToTerminal(`$ Setting up capture for BSSID: ${bssid} on channel ${channel}`, 'command');
+            addLog(`Starting handshake capture for ${appState.targetNetwork.essid}`, LOG_LEVEL.COMMAND);
+            
+            // Simulate airodump-ng command
+            const captureCommand = `$ airodump-ng -c ${channel} --bssid ${bssid} -w capture ${interfaceName}`;
+            appendToCaptureTerminal(captureCommand);
+            
+            // Simulate capture setup
+            setTimeout(() => {
+                appendToCaptureTerminal('CH 6 ][ Elapsed: 0 s ][ 2023-06-08 15:42 ][ WPA handshake:');
+                appendToCaptureTerminal(' BSSID              PWR RXQ  Beacons    #Data, #/s  CH  MB   ENC  CIPHER AUTH ESSID');
+                appendToCaptureTerminal(' ' + bssid + '  -65  70     1024      123   0   ' + channel + '  54e  WPA2 CCMP   PSK  ' + appState.targetNetwork.essid);
+                appendToCaptureTerminal(' STATION            PWR   Rate    Lost    Frames  Probe');
+                
+                // Update capture status
+                $('#capture-status').innerHTML = `
+                    <div class="text-yellow-400">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>
+                        Listening for handshake packets...
+                    </div>
+                `;
+                
+                // Show client list container
+                $('#client-list-container').classList.remove('hidden');
+                
+                // Simulate finding clients
+                setTimeout(() => {
+                    // Simulate client discovery
+                    const clients = [
+                        { mac: '22:33:44:55:66:77', packets: 42 },
+                        { mac: '33:44:55:66:77:88', packets: 28 },
+                        { mac: '44:55:66:77:88:99', packets: 15 }
+                    ];
+                    
+                    appState.clients = clients;
+                    updateClientList();
+                    
+                    // Perform deauth if selected
+                    if (deauthAll) {
+                        performDeauth(bssid, 'FF:FF:FF:FF:FF:FF', deauthPackets, interfaceName);
+                    }
+                }, 3000);
+            }, 1500);
+        }
+        
+        // Update client list
+        function updateClientList() {
+            const clientList = $('#client-list');
+            clientList.innerHTML = '';
+            
+            if (appState.clients.length === 0) {
+                clientList.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="px-2 py-2 text-center text-gray-400">
+                            No clients detected
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            appState.clients.forEach(client => {
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-700';
+                
+                row.innerHTML = `
+                    <td class="px-2 py-2 font-mono">${client.mac}</td>
+                    <td class="px-2 py-2 text-center">${client.packets}</td>
+                    <td class="px-2 py-2 text-center">
+                        <button class="deauth-client bg-yellow-600 hover:bg-yellow-700 px-2 py-1 rounded text-xs"
+                            data-mac="${client.mac}">
+                            Deauth
+                        </button>
+                    </td>
+                `;
+                
+                clientList.appendChild(row);
+            });
+            
+            // Add event listeners to deauth buttons
+
+            $$('.deauth-client').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const clientMac = e.target.getAttribute('data-mac');
+                    const interfaceName = appState.currentInterface.includes('mon') ? 
+                        appState.currentInterface : 
+                        `${appState.currentInterface}mon`;
+                    
+                    performDeauth(appState.targetNetwork.bssid, clientMac, $('#deauth-packets').value, interfaceName);
+                });
+            });
+        }
+        
+        // Perform deauthentication
+        function performDeauth(bssid, clientMac, packets, interfaceName) {
+            const isAllClients = clientMac === 'FF:FF:FF:FF:FF:FF';
+            const targetText = isAllClients ? 'all clients' : `client ${clientMac}`;
+            
+            appendToCaptureTerminal(`\n# Sending deauthentication to ${targetText}`);
+            
+            const deauthCommand = `$ aireplay-ng --deauth ${packets} -a ${bssid} ${isAllClients ? '' : `-c ${clientMac}`} ${interfaceName}`;
+            appendToCaptureTerminal(deauthCommand);
+            
+            // Simulate deauth process
+            setTimeout(() => {
+                appendToCaptureTerminal('15:42:58  Waiting for beacon frame (BSSID: ' + bssid + ') on channel ' + appState.targetNetwork.channel);
+                appendToCaptureTerminal('15:42:58  Sending DeAuth to broadcast -- BSSID: [' + bssid + ']');
+                
+                for (let i = 0; i < packets; i++) {
+                    appendToCaptureTerminal('15:42:' + (59 + i) + '  Sending DeAuth to broadcast -- BSSID: [' + bssid + ']');
+                }
+                
+                // Simulate handshake capture (50% chance)
+                if (Math.random() > 0.5) {
+                    simulateHandshakeCapture();
+                } else {
+                    $('#capture-status').innerHTML = `
+                        <div class="text-yellow-400">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            No handshake captured. Try sending more deauthentication packets.
+                        </div>
+                    `;
+                }
+            }, 1000);
+        }
+        
+        // Simulate handshake capture
+        function simulateHandshakeCapture() {
+            setTimeout(() => {
+                appendToCaptureTerminal('\n15:43:05  WPA handshake: ' + appState.targetNetwork.bssid);
+                
+                // Update capture status
+                $('#capture-status').innerHTML = `
+                    <div class="text-green-400">
+                        <i class="fas fa-check-circle mr-2"></i>
+                        Handshake captured successfully!
+                    </div>
+                `;
+                
+                // Add to handshake list
+                const timestamp = new Date().toLocaleTimeString();
+                const handshakeFile = `capture_${appState.targetNetwork.bssid.replace(/:/g, '')}_${timestamp.replace(/:/g, '')}.cap`;
+                
+                appState.handshakes.push({
+                    file: handshakeFile,
+                    bssid: appState.targetNetwork.bssid,
+                    essid: appState.targetNetwork.essid,
+                    timestamp: new Date().toISOString()
+                });
+                
+                updateHandshakeList();
+                updateCrackingTab();
+                
+                writeToTerminal(`✓ WPA handshake captured for ${appState.targetNetwork.essid}`, 'success');
+                addLog(`Handshake captured for ${appState.targetNetwork.essid}`, LOG_LEVEL.SUCCESS);
+            }, 2000);
+        }
+        
+        // Update handshake list
+        function updateHandshakeList() {
+            const handshakeList = $('#handshake-list');
+            handshakeList.innerHTML = '';
+            
+            if (appState.handshakes.length === 0) {
+                $('#no-handshakes').classList.remove('hidden');
+                return;
+            }
+            
+            $('#no-handshakes').classList.add('hidden');
+            
+            appState.handshakes.forEach(handshake => {
+                const li = document.createElement('li');
+                li.className = 'py-2 px-2 hover:bg-gray-700';
+                
+                const timestamp = new Date(handshake.timestamp).toLocaleTimeString();
+                
+                li.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <div class="font-bold">${handshake.essid}</div>
+                            <div class="text-gray-400 text-xs">${handshake.bssid}</div>
+                            <div class="text-gray-400 text-xs">Captured at ${timestamp}</div>
+                        </div>
+                        <div>
+                            <button class="use-handshake bg-blue-600 hover:bg-blue-700 px-2 py-1 rounded text-xs"
+                                data-file="${handshake.file}" data-essid="${handshake.essid}" data-bssid="${handshake.bssid}">
+                                Use
+                            </button>
+                        </div>
+                    </div>
+                `;
+                
+                handshakeList.appendChild(li);
+            });
+            
+            // Add event listeners to use buttons
+
+            $$('.use-handshake').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const file = e.target.getAttribute('data-file');
+                    const essid = e.target.getAttribute('data-essid');
+                    const bssid = e.target.getAttribute('data-bssid');
+                    
+                    // Switch to crack tab
+
+                    $$('.custom-tab[data-tab="crack"]')[0].click();
+                    
+                    // Select this handshake
+                    const handshakeSelect = $('#handshake-select');
+                    const options = Array.from(handshakeSelect.options);
+                    const optionToSelect = options.find(option => option.value === file);
+                    
+                    if (optionToSelect) {
+                        optionToSelect.selected = true;
+                        $('#start-cracking').disabled = false;
+                    }
+                    
+                    addLog(`Selected handshake file: ${file}`, LOG_LEVEL.INFO);
+                });
+            });
+        }
+        
+        // Append to capture terminal
+        function appendToCaptureTerminal(text, type = '') {
+            const terminal = $('#capture-terminal');
+            const entry = document.createElement('div');
+            
+            if (type === 'command') {
+                entry.className = 'command-info';
+            } else if (type === 'error') {
+                entry.className = 'command-error';
+            } else if (type === 'success') {
+                entry.className = 'command-success';
+            }
+            
+            entry.textContent = text;
+            terminal.appendChild(entry);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        // Stop handshake capture
+        function stopHandshakeCapture() {
+            $('#start-capture').disabled = false;
+            $('#stop-capture').disabled = true;
+            appState.capturing = false;
+            
+            appendToCaptureTerminal('\n# Stopping capture');
+            writeToTerminal('$ Handshake capture stopped', 'command');
+            addLog('Handshake capture stopped', LOG_LEVEL.INFO);
+            updateStatus('Ready');
+            
+            $('#capture-status').textContent = 'Capture stopped';
+        }
+        
+        // Update cracking tab with available handshakes
+        function updateCrackingTab() {
+            const handshakeSelect = $('#handshake-select');
+            handshakeSelect.innerHTML = '';
+            
+            if (appState.handshakes.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = 'No handshakes available';
+                handshakeSelect.appendChild(option);
+                $('#start-cracking').disabled = true;
+                return;
+            }
+            
+            appState.handshakes.forEach(handshake => {
+                const option = document.createElement('option');
+                option.value = handshake.file;
+                option.textContent = `${handshake.essid} (${handshake.bssid})`;
+                handshakeSelect.appendChild(option);
+            });
+            
+            $('#start-cracking').disabled = false;
+        }
+        
+        // Handle wordlist selection
+        function handleWordlistSelection() {
+            const wordlistSelect = $('#wordlist-select');
+            const customWordlistContainer = $('#custom-wordlist-container');
+            
+            if (wordlistSelect.value === 'custom') {
+                customWordlistContainer.classList.remove('hidden');
+            } else {
+                customWordlistContainer.classList.add('hidden');
+            }
+        }
+        
+        // Update custom wordlist name
+        function updateCustomWordlistName() {
+            const fileInput = $('#custom-wordlist-file');
+            const fileNameInput = $('#custom-wordlist-name');
+            
+            if (fileInput.files.length > 0) {
+                fileNameInput.value = fileInput.files[0].name;
+            } else {
+                fileNameInput.value = '';
+            }
+        }
+        
+        // Start password cracking
+        function startPasswordCracking() {
+            const handshakeFile = $('#handshake-select').value;
+            if (!handshakeFile) {
+                showErrorModal('Error', 'No handshake file selected', 'Please select a captured handshake file first');
+                return;
+            }
+            
+            // Get selected handshake details
+            const selectedHandshake = appState.handshakes.find(h => h.file === handshakeFile);
+            if (!selectedHandshake) return;
+            
+            // Get wordlist
+            let wordlist = $('#wordlist-select').value;
+            if (wordlist === 'custom') {
+                if (!$('#custom-wordlist-file').files.length) {
+                    showErrorModal('Error', 'No custom wordlist selected', 'Please upload a custom wordlist file');
+                    return;
+                }
+                wordlist = $('#custom-wordlist-name').value;
+            }
+            
+            $('#start-cracking').disabled = true;
+            $('#stop-cracking').disabled = false;
+            appState.cracking = true;
+            
+            updateStatus('Cracking password...');
+            $('#cracking-status').innerHTML = `
+                <div class="flex items-center">
+                    <div class="loading mr-3"></div>
+                    <span>Setting up password cracking...</span>
+                </div>
+            `;
+            
+            $('#crack-terminal').textContent = '';
+            
+            const useRules = $('#use-rules').checked ? '-r /usr/share/john/rules/best64.rule' : '';
+            const command = `$ aircrack-ng -w ${wordlist} ${useRules} ${handshakeFile}`;
+            
+            appendToCrackTerminal(command, 'command');
+            writeToTerminal(`Starting password cracking for ${selectedHandshake.essid}`, 'info');
+            addLog(`Starting password cracking for ${selectedHandshake.essid}`, LOG_LEVEL.INFO);
+            
+            // Simulate cracking process
+            setTimeout(() => {
+                appendToCrackTerminal('Reading packets, please wait...');
+                appendToCrackTerminal('Opening ' + handshakeFile);
+                appendToCrackTerminal('Read 312 packets.');
+                appendToCrackTerminal('');
+                appendToCrackTerminal('   #  BSSID              ESSID                     Encryption');
+                appendToCrackTerminal('   1  ' + selectedHandshake.bssid + '  ' + selectedHandshake.essid.padEnd(25) + '  WPA (1 handshake)');
+                appendToCrackTerminal('');
+                appendToCrackTerminal('Choosing first network as target.');
+                
+                // Update status
+                $('#cracking-status').innerHTML = `
+                    <div class="text-yellow-400">
+                        <i class="fas fa-cog fa-spin mr-2"></i>
+                        Cracking in progress...
+                    </div>
+                `;
+                
+                // Start progress simulation
+                simulateCrackingProgress(selectedHandshake);
+            }, 1500);
+        }
+        
+        // Simulate cracking progress
+        function simulateCrackingProgress(handshake) {
+            let progress = 0;
+            let speed = 1500;
+            let keysTested = 0;
+            let startTime = new Date();
+            
+            // Will we find the password? (50% chance)
+            const willFindPassword = Math.random() > 0.5;
+            // If we find it, at what % will we find it?
+            const findAtProgress = Math.floor(Math.random() * 60) + 20;
+            
+            const progressInterval = setInterval(() => {
+                if (!appState.cracking) {
+                    clearInterval(progressInterval);
+                    return;
+                }
+                
+                progress += Math.random() * 2;
+                if (progress > 100) progress = 100;
+                
+                // Update speed randomly
+                speed = Math.floor(1000 + Math.random() * 1000);
+                keysTested += speed * 3;
+                
+                // Calculate elapsed time
+                const elapsedMs = new Date() - startTime;
+                const elapsedSec = Math.floor(elapsedMs / 1000);
+                const hours = Math.floor(elapsedSec / 3600);
+                const minutes = Math.floor((elapsedSec - (hours * 3600)) / 60);
+                const seconds = elapsedSec - (hours * 3600) - (minutes * 60);
+                const elapsedTime = 
+                    String(hours).padStart(2, '0') + ':' + 
+                    String(minutes).padStart(2, '0') + ':' + 
+                    String(seconds).padStart(2, '0');
+                
+                // Calculate ETC
+                const remaining = progress > 0 ? (100 - progress) / progress * elapsedSec : 0;
+                const remainingHours = Math.floor(remaining / 3600);
+                const remainingMinutes = Math.floor((remaining - (remainingHours * 3600)) / 60);
+                const remainingSeconds = Math.floor(remaining - (remainingHours * 3600) - (remainingMinutes * 60));
+                const etc = 
+                    String(remainingHours).padStart(2, '0') + ':' + 
+                    String(remainingMinutes).padStart(2, '0') + ':' + 
+                    String(remainingSeconds).padStart(2, '0');
+                
+                // Update UI
+                $('#progress-percentage').textContent = Math.floor(progress) + '%';
+                $('#progress-bar').style.width = progress + '%';
+                $('#crack-speed').textContent = speed + ' k/s';
+                $('#crack-time').textContent = elapsedTime;
+                $('#keys-tested').textContent = keysTested.toLocaleString();
+                $('#etc').textContent = etc;
+                
+                // Simulate output
+                if (Math.random() > 0.8) {
+                    appendToCrackTerminal(`Tested ${keysTested.toLocaleString()} keys (${speed} k/s)`);
+                }
+                
+                // Check if we found the password
+                if (willFindPassword && progress >= findAtProgress && !$('#password-result').classList.contains('block')) {
+                    clearInterval(progressInterval);
+                    simulatePasswordFound(handshake);
+                }
+                
+                // Check if we completed without finding
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    
+                    if (!willFindPassword) {
+                        simulatePasswordNotFound();
+                    }
+                }
+            }, 1000);
+        }
+        
+        // Simulate password found
+        function simulatePasswordFound(handshake) {
+            appendToCrackTerminal('\nKEY FOUND! [ CorrectPassword123 ]', 'success');
+            appendToCrackTerminal('\nMaster Key     : E3 F2 87 3C 56 45 FF 21 9B A8 76 55 A5 88 9C 01');
+            appendToCrackTerminal('Transient Key  : 3F 4D E9 AC 8D CB B5 8A 88 3C 3C 6E CA 4F 82 0F');
+            appendToCrackTerminal('                 6B 2A 27 1A 9B 60 11 D8 A0 19 D8 A0 88 96 B2 AB');
+            appendToCrackTerminal('                 C3 FF 99 04 63 73 27 99 F9 E5 7F 61 2C 78 3B 9E');
+            appendToCrackTerminal('EAPOL HMAC     : 9F 8E A1 BE 57 22 71 CC 6C 25 2A D7 D2 D6 07 4A');
+            
+            // Update status
+            $('#cracking-status').innerHTML = `
+                <div class="text-green-400">
+                    <i class="fas fa-check-circle mr-2"></i>
+                    Password found successfully!
+                </div>
+            `;
+            
+            // Update result display
+            $('#result-essid').textContent = handshake.essid;
+            $('#result-bssid').textContent = handshake.bssid;
+            $('#result-password').textContent = 'CorrectPassword123';
+            $('#password-result').classList.remove('hidden');
+            
+            // Reset buttons
+            $('#start-cracking').disabled = false;
+            $('#stop-cracking').disabled = true;
+            appState.cracking = false;
+            
+            writeToTerminal(`✓ Password found for ${handshake.essid}: CorrectPassword123`, 'success');
+            addLog(`Password found for ${handshake.essid}: CorrectPassword123`, LOG_LEVEL.SUCCESS);
+            updateStatus('Ready');
+        }
+        
+        // Simulate password not found
+        function simulatePasswordNotFound() {
+            appendToCrackTerminal('\nPassphrase not in dictionary', 'error');
+            appendToCrackTerminal('Tried 12458963 keys total');
+            
+            // Update status
+            $('#cracking-status').innerHTML = `
+                <div class="text-red-400">
+                    <i class="fas fa-times-circle mr-2"></i>
+                    Password not found in wordlist.
+                </div>
+            `;
+            
+            // Reset buttons
+            $('#start-cracking').disabled = false;
+            $('#stop-cracking').disabled = true;
+            appState.cracking = false;
+            
+            writeToTerminal(`Password not found for the selected network`, 'error');
+            addLog(`Password not found in wordlist`, LOG_LEVEL.ERROR);
+            updateStatus('Ready');
+        }
+        
+        // Append to crack terminal
+        function appendToCrackTerminal(text, type = '') {
+            const terminal = $('#crack-terminal');
+            const entry = document.createElement('div');
+            
+            if (type === 'command') {
+                entry.className = 'command-info';
+            } else if (type === 'error') {
+                entry.className = 'command-error';
+            } else if (type === 'success') {
+                entry.className = 'command-success';
+            }
+            
+            entry.textContent = text;
+            terminal.appendChild(entry);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        // Stop password cracking
+        function stopPasswordCracking() {
+            $('#start-cracking').disabled = false;
+            $('#stop-cracking').disabled = true;
+            appState.cracking = false;
+            
+            appendToCrackTerminal('\n# Stopping password cracking', 'info');
+            writeToTerminal('$ Password cracking stopped', 'command');
+            addLog('Password cracking stopped', LOG_LEVEL.INFO);
+            
+            $('#cracking-status').innerHTML = `
+                <div class="text-gray-400">
+                    <i class="fas fa-stop-circle mr-2"></i>
+                    Password cracking stopped by user.
+                </div>
+            `;
+            
+            updateStatus('Ready');
+        }
+        
+        // Update application status
+        function updateStatus(status) {
+            $('#status-text').textContent = status;
+            
+            const indicator = $('#status-indicator');
+            
+            // Set color based on status
+            if (status.includes('Error')) {
+                indicator.className = 'h-3 w-3 rounded-full bg-red-500 mr-2';
+            } else if (status === 'Ready') {
+                indicator.className = 'h-3 w-3 rounded-full bg-green-500 mr-2';
+            } else {
+                indicator.className = 'h-3 w-3 rounded-full bg-yellow-500 mr-2';
+            }
+        }
+    </script>
+</body>
+</html>
