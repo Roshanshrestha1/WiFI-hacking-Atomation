@@ -1,4 +1,6 @@
 Aircrack-ng Automation Tool for Kali Linux
+             live
+https://roshanshrestha1.github.io/WiFI-hacking-Atomation/
 
 Key Implemented
 Robust Monitor Mode Handling: Properly switches between managed and monitor modes using multiple methods
@@ -22,7 +24,7 @@ mkdir -p ~/wifi-tool
 cd ~/wifi-tool
 Step 2: Download the Fixed Tool
 Copy# Download the fixed HTML file
-wget https://page.genspark.site/page/toolu_017nzNuNTZ6Pg1Rxo3ksYLqj/fixed_kali_aircrack_tool.html -O index.html
+wget https://roshanshrestha1.github.io/WiFI-hacking-Atomation/ -O 
 
 Step 3: Create Backend PHP Files
 Create the main backend handler:
